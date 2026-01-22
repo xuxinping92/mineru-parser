@@ -1,0 +1,58 @@
+[build-system]
+requires = ["poetry-core>=1.8.0"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry]
+name = "mineru-parser"
+version = "0.1.0"
+description = "Document parsing and cleaning toolkit based on MinerU"
+authors = ["Xinping Xu"]
+readme = "README.md"
+
+packages = [{ include = "mineru_parser" }]
+
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+
+python-docx = "^1.1.0"
+openpyxl = "^3.1.2"
+python-pptx = "^0.6.23"
+pdfplumber = "^0.10.3"
+
+tqdm = "^4.66.1"
+requests = "^2.31.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+
+[tool.black]
+line-length = 88 # 每行最大字符数，可根据你习惯改成 100、120 等
+target-version = ["py310"] # Python 目标版本，可改成 py39, py311 等
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"                         # 和 black 风格保持一致
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip = ["build", "dist", ".venv", ".git"]
