@@ -1,3 +1,4 @@
+# example：one document parsing
 from mineru_parser import parse_folder
 
 parse_folder(
