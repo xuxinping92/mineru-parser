@@ -15,4 +15,10 @@ def parse_folder(inputs: InputType, output_dir: str, batch_size: int = 50):
         upload_info = apply_upload_urls(batch)
         upload_files(batch, upload_info["file_urls"])
         results = poll_batch(upload_info["batch_id"])
-        download_results(results, output_dir, extract=True, keep_zip=False)
+        download_results(
+            results,
+            output_dir,
+            extract=True,
+            keep_zip=False,
+            on_conflict="rename",
+        )
