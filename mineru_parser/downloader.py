@@ -37,6 +37,43 @@ def _resolve_conflict_dir(path: str, mode: Literal["overwrite", "rename"]) -> st
     raise ValueError(f"未知的冲突处理策略: {mode}")
 
 
+def _safe_extract_zip(zf: zipfile.ZipFile, extract_dir: str):
+    """
+    Windows 终极安全解压：
+    - 把 \\ 当作普通分隔符
+    - 去掉所有路径段首尾空格
+    - 防止“目录名 + 空格”炸裂
+    """
+
+    for member in zf.infolist():
+        raw = member.filename
+
+        # 1️⃣ 统一分隔符：无论是 \ 还是 /，全部当路径
+        raw = raw.replace("\\", "/")
+
+        # 2️⃣ 按 / 拆分，并 strip 掉每一段
+        parts = [p.strip() for p in raw.split("/") if p.strip()]
+        if not parts:
+            continue
+
+        target_path = os.path.join(extract_dir, *parts)
+
+        # 3️⃣ 目录判断（zip 很多目录不标 is_dir）
+        if member.is_dir() or raw.endswith("/"):
+            os.makedirs(target_path, exist_ok=True)
+            continue
+
+        # 4️⃣ 确保父目录存在（这里不会再有“尾空格目录”）
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+
+        with zf.open(member) as src, open(target_path, "wb") as dst:
+            shutil.copyfileobj(src, dst)
+
+
+def _sanitize_name(name: str) -> str:
+    return name.strip().rstrip(".")
+
+
 def download_results(
     results,
     output_dir: str,
@@ -66,7 +103,7 @@ def download_results(
         resp = requests.get(url)
         resp.raise_for_status()
 
-        base_name = r["file_name"].rsplit(".", 1)[0]
+        base_name = _sanitize_name(r["file_name"].rsplit(".", 1)[0])
         zip_path = os.path.join(output_dir, base_name + ".zip")
 
         # 1️⃣ 保存 zip
@@ -82,7 +119,7 @@ def download_results(
             os.makedirs(extract_dir, exist_ok=True)
 
             with zipfile.ZipFile(zip_path, "r") as zf:
-                zf.extractall(extract_dir)
+                _safe_extract_zip(zf, extract_dir)
 
             print(f"📂 已解压到: {extract_dir}")
 
