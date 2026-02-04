@@ -1,4 +1,5 @@
 # downloader.py
+import json
 import os
 import shutil
 import zipfile
@@ -80,6 +81,7 @@ def download_results(
     extract: bool = False,
     keep_zip: bool = False,
     on_conflict: Literal["overwrite", "rename"] = "rename",
+    source_map: dict | None = None,
 ):
     """
     下载解析结果
@@ -126,3 +128,17 @@ def download_results(
             if not keep_zip:
                 os.remove(zip_path)
                 print(f"🗑️ 已删除压缩包: {zip_path}")
+
+            # ⭐ 3️⃣ 写入原始文件路径的 metadata
+            if source_map:
+                original_filename = r["file_name"]
+                source_path = source_map.get(original_filename)
+
+                meta = {
+                    "file_name": original_filename,
+                    "source_path": source_path,
+                }
+
+                meta_path = os.path.join(extract_dir, "source_file.json")
+                with open(meta_path, "w", encoding="utf-8") as f:
+                    json.dump(meta, f, ensure_ascii=False, indent=2)
